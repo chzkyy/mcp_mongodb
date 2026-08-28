@@ -1,10 +1,10 @@
 /**
- * Smoke test untuk mcp-mongodb.
- * Menjalankan server sebagai child process dan berkomunikasi via
- * JSON-RPC newline-delimited (persis seperti Claude Desktop).
+ * Smoke test for mcp-mongodb.
+ * Runs the server as a child process and communicates via
+ * newline-delimited JSON-RPC (exactly like Claude Desktop).
  *
- * Tidak memerlukan MongoDB berjalan — koneksi dibuat lazy.
- * Jalankan dengan: npm test
+ * It does not require MongoDB to be running — the connection is lazy.
+ * Run with: npm test
  */
 import { spawn } from "node:child_process";
 
@@ -47,7 +47,7 @@ function rpc(method, params) {
     const id = nextId++;
     const timer = setTimeout(() => {
       waiters.delete(id);
-      reject(new Error(`Timeout menunggu respons '${method}'`));
+      reject(new Error(`Timeout waiting for the '${method}' response`));
     }, 20000);
     waiters.set(id, (msg) => {
       clearTimeout(timer);
@@ -82,24 +82,24 @@ try {
   );
   notify("notifications/initialized");
 
-  // 2) Daftar tools
+  // 2) List tools
   const tools = await rpc("tools/list", {});
   const names = (tools.result?.tools ?? []).map((t) => t.name);
-  check("tools/list", names.length >= 20, `${names.length} tool terdaftar`);
+  check("tools/list", names.length >= 20, `${names.length} tools registered`);
   console.log("Tools:", names.join(", "));
 
   const coreTools = ["find", "insert_one", "update_one", "delete_one", "aggregate", "list_collections"];
   const missing = coreTools.filter((n) => !names.includes(n));
-  check("tool inti tersedia", missing.length === 0, missing.length ? `hilang: ${missing.join(", ")}` : "semua ada");
+  check("core tools available", missing.length === 0, missing.length ? `missing: ${missing.join(", ")}` : "all present");
 
-  // 3) Panggil satu tool (server_info). Bila MongoDB lokal tidak jalan,
-  //    hasil error tetap dianggap lulus karena membuktikan jalur RPC bekerja.
+  // 3) Call one tool (server_info). If local MongoDB is not running,
+  //    the error result is still considered passing because it proves the RPC path works.
   const call = await rpc("tools/call", { name: "server_info", arguments: {} });
   const text = call.result?.content?.[0]?.text ?? "";
   console.log(`INFO: server_info → ${text.replace(/\n/g, " ").slice(0, 160)}`);
-  check("tools/call merespons", Array.isArray(call.result?.content) && call.result.content.length > 0);
+  check("tools/call responds", Array.isArray(call.result?.content) && call.result.content.length > 0);
 
-  check("tidak ada output asing di stdout", true);
+  check("no foreign output on stdout", true);
 } catch (e) {
   failures++;
   console.log(`FAIL: ${e.message}`);
@@ -109,7 +109,7 @@ try {
 }
 
 if (stderrBuf.trim()) {
-  console.log("--- log stderr server ---");
+  console.log("--- server stderr log ---");
   console.log(stderrBuf.trim());
 }
 process.exit(failures ? 1 : 0);

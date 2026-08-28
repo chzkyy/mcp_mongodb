@@ -1,7 +1,7 @@
 {
   "name": "mcp-mongodb",
   "version": "1.0.0",
-  "description": "MCP (Model Context Protocol) server untuk menghubungkan Claude ke MongoDB",
+  "description": "MCP (Model Context Protocol) server to connect Claude to MongoDB",
   "type": "module",
   "main": "index.js",
   "bin": {

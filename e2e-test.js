@@ -1,12 +1,12 @@
 /**
- * E2E test mcp-mongodb menggunakan MongoDB in-memory sungguhan.
- * Menguji seluruh siklus CRUD + agregasi + index melalui protokol MCP.
- * Jalankan dengan: npm run test:e2e
+ * E2E test for mcp-mongodb using a real in-memory MongoDB.
+ * Tests the full CRUD + aggregation + index cycle through the MCP protocol.
+ * Run with: npm run test:e2e
  */
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { spawn } from "node:child_process";
 
-console.log("Menjalankan MongoDB in-memory...");
+console.log("Starting in-memory MongoDB...");
 const mongod = await MongoMemoryServer.create();
 const uri = mongod.getUri();
 
@@ -44,7 +44,7 @@ function rpc(method, params) {
     const id = nextId++;
     const timer = setTimeout(() => {
       waiters.delete(id);
-      reject(new Error(`Timeout menunggu respons '${method}'`));
+      reject(new Error(`Timeout waiting for the '${method}' response`));
     }, 30000);
     waiters.set(id, (msg) => {
       clearTimeout(timer);
@@ -81,7 +81,7 @@ try {
   check("initialize", init.result?.serverInfo?.name === "mcp-mongodb");
   notify("notifications/initialized");
 
-  // --- Tools info & struktur ---
+  // --- Info & structure tools ---
   const info = await callTool("server_info");
   check("server_info", info.connected === true && !!info.mongodbVersion, `v${info.mongodbVersion}`);
 
@@ -100,7 +100,7 @@ try {
     document: { nama: "Kopi Arabika", kategori: "minuman", harga: 85000, stok: 10 },
   });
   const id1 = ins.insertedId;
-  check("insert_one (kembalikan ObjectId)", /^[0-9a-f]{24}$/.test(id1 || ""), id1);
+  check("insert_one (returns ObjectId)", /^[0-9a-f]{24}$/.test(id1 || ""), id1);
 
   const many = await callTool("insert_many", {
     collection: "produk",
@@ -185,20 +185,20 @@ try {
   const idxList = await callTool("list_indexes", { collection: "produk" });
   check("list_indexes", idxList.indexes.some((i) => i.name === "nama_unique"));
 
-  // --- Delete (dengan uji proteksi) ---
+  // --- Delete (with guard test) ---
   const guard = await rpc("tools/call", {
     name: "delete_many",
     arguments: { collection: "produk", filter: {} },
   });
-  check("delete_many filter kosong DITOLAK tanpa confirm", guard.result?.isError === true);
+  check("delete_many empty filter REJECTED without confirm", guard.result?.isError === true);
 
   const delOne = await callTool("delete_one", { collection: "produk", filter: { nama: "Kopi Robusta" } });
   check("delete_one", delOne.deletedCount === 1);
 
   const delMany = await callTool("delete_many", { collection: "produk", filter: { kategori: "bahan" } });
-  check("delete_many dengan filter", delMany.deletedCount >= 1, String(delMany.deletedCount));
+  check("delete_many with filter", delMany.deletedCount >= 1, String(delMany.deletedCount));
 
-  // --- Statistik & struktur lanjutan ---
+  // --- Statistics & advanced structures ---
   const cstat = await callTool("collection_stats", { collection: "produk" });
   check("collection_stats", typeof cstat.count === "number", `count=${cstat.count}`);
 
@@ -211,7 +211,7 @@ try {
   const dropCol = await callTool("drop_collection", { collection: "barang" });
   check("drop_collection", typeof dropCol.dropped === "string");
 
-  console.log(failures === 0 ? "\nSEMUA TES E2E LULUS ✔" : `\n${failures} TES GAGAL ✘`);
+  console.log(failures === 0 ? "\nALL E2E TESTS PASSED ✔" : `\n${failures} TESTS FAILED ✘`);
 } catch (e) {
   failures++;
   console.log(`FAIL: ${e.message}`);

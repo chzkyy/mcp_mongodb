@@ -10,10 +10,10 @@ import * as S from "../lib/schemas.js";
 
 function ensureObject(value, name, { allowEmpty = false } = {}) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`'${name}' harus berupa objek JSON.`);
+    throw new Error(`'${name}' must be a JSON object.`);
   }
   if (!allowEmpty && Object.keys(value).length === 0) {
-    throw new Error(`'${name}' tidak boleh kosong.`);
+    throw new Error(`'${name}' must not be empty.`);
   }
   return value;
 }
@@ -31,13 +31,13 @@ function updateResult(res) {
   };
 }
 
-/** Tools penulisan data: insert, update, replace, delete */
+/** Data writing tools: insert, update, replace, delete */
 export function registerDocumentTools(server) {
   const reg = registrar(server);
 
   reg(
     "insert_one",
-    "Sisipkan SATU dokumen baru ke dalam koleksi. Mengembalikan _id dokumen yang dibuat.",
+    "Insert ONE new document into the collection. Returns the _id of the created document.",
     {
       database: S.DatabaseArg,
       collection: S.CollectionArg,
@@ -56,7 +56,7 @@ export function registerDocumentTools(server) {
 
   reg(
     "insert_many",
-    "Sisipkan BANYAK dokumen sekaligus ke dalam koleksi.",
+    "Insert MANY documents into the collection at once.",
     {
       database: S.DatabaseArg,
       collection: S.CollectionArg,
@@ -65,7 +65,7 @@ export function registerDocumentTools(server) {
     async (a) => {
       const docs = parseJson(a.documents, "documents");
       if (!Array.isArray(docs) || docs.length === 0) {
-        throw new Error("'documents' harus array berisi minimal satu dokumen.");
+        throw new Error("'documents' must be an array containing at least one document.");
       }
       const { db, col } = await withCollection(a);
       const res = await col.insertMany(docs);
@@ -83,7 +83,7 @@ export function registerDocumentTools(server) {
 
   reg(
     "update_one",
-    "Perbarui DOKUMEN PERTAMA yang cocok dengan filter menggunakan operator update.",
+    "Update the FIRST document matching the filter using update operators.",
     {
       database: S.DatabaseArg,
       collection: S.CollectionArg,
@@ -101,7 +101,7 @@ export function registerDocumentTools(server) {
 
   reg(
     "update_many",
-    "Perbarui SEMUA dokumen yang cocok dengan filter menggunakan operator update.",
+    "Update ALL documents matching the filter using update operators.",
     {
       database: S.DatabaseArg,
       collection: S.CollectionArg,
@@ -119,7 +119,7 @@ export function registerDocumentTools(server) {
 
   reg(
     "replace_one",
-    "Ganti seluruh isi satu dokumen yang cocok dengan filter dengan dokumen baru.",
+    "Replace the entire contents of one document matching the filter with a new document.",
     {
       database: S.DatabaseArg,
       collection: S.CollectionArg,
@@ -131,7 +131,7 @@ export function registerDocumentTools(server) {
       const filter = ensureObject(parseJson(a.filter, "filter"), "filter");
       const replacement = ensureObject(parseJson(a.replacement, "replacement"), "replacement");
       if (Object.keys(replacement).some((k) => k.startsWith("$"))) {
-        throw new Error("'replacement' tidak boleh mengandung operator $. Gunakan update_one/update_many.");
+        throw new Error("'replacement' must not contain $ operators. Use update_one/update_many instead.");
       }
       const { col } = await withCollection(a);
       return updateResult(await col.replaceOne(filter, replacement, { upsert: Boolean(a.upsert) }));
@@ -140,7 +140,7 @@ export function registerDocumentTools(server) {
 
   reg(
     "delete_one",
-    "Hapus SATU dokumen pertama yang cocok dengan filter.",
+    "Delete the FIRST document matching the filter.",
     {
       database: S.DatabaseArg,
       collection: S.CollectionArg,
@@ -152,7 +152,7 @@ export function registerDocumentTools(server) {
       const res = await col.deleteOne(filter);
       return {
         deletedCount: res.deletedCount,
-        ...(res.deletedCount === 0 ? { note: "Tidak ada dokumen yang cocok." } : {}),
+        ...(res.deletedCount === 0 ? { note: "No documents matched." } : {}),
       };
     },
     { destructiveHint: true }
@@ -160,7 +160,7 @@ export function registerDocumentTools(server) {
 
   reg(
     "delete_many",
-    "PERINGATAN: Hapus SEMUA dokumen yang cocok dengan filter! Filter kosong ({}) hanya diizinkan bila confirm: true.",
+    "WARNING: Delete ALL documents matching the filter! An empty filter ({}) is only allowed when confirm: true.",
     {
       database: S.DatabaseArg,
       collection: S.CollectionArg,
@@ -171,14 +171,14 @@ export function registerDocumentTools(server) {
       const filter = parseJson(a.filter, "filter") ?? {};
       if (Object.keys(filter).length === 0 && !a.confirm) {
         throw new Error(
-          "Filter kosong akan menghapus SEMUA dokumen dalam koleksi. Set 'confirm': true jika benar-benar yakin."
+          "An empty filter will delete ALL documents in the collection. Set 'confirm': true if you are really sure."
         );
       }
       const { col } = await withCollection(a);
       const res = await col.deleteMany(filter);
       return {
         deletedCount: res.deletedCount,
-        ...(res.deletedCount === 0 ? { note: "Tidak ada dokumen yang cocok." } : {}),
+        ...(res.deletedCount === 0 ? { note: "No documents matched." } : {}),
       };
     },
     { destructiveHint: true }

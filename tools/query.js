@@ -9,13 +9,13 @@ import {
 } from "../lib/helpers.js";
 import * as S from "../lib/schemas.js";
 
-/** Tools pembacaan data: find, findOne, get_by_id, count, distinct, aggregate, list_indexes */
+/** Data reading tools: find, findOne, get_by_id, count, distinct, aggregate, list_indexes */
 export function registerQueryTools(server) {
   const reg = registrar(server);
 
   reg(
     "find",
-    "Cari dokumen dalam koleksi dengan filter opsional, proyeksi field, urutan, dan paginasi.",
+    "Search for documents in a collection with an optional filter, field projection, ordering, and pagination.",
     {
       database: S.DatabaseArg,
       collection: S.CollectionArg,
@@ -52,7 +52,7 @@ export function registerQueryTools(server) {
 
   reg(
     "find_one",
-    "Ambil SATU dokumen pertama yang cocok dengan filter.",
+    "Fetch the FIRST document matching the filter.",
     {
       database: S.DatabaseArg,
       collection: S.CollectionArg,
@@ -66,32 +66,32 @@ export function registerQueryTools(server) {
       const doc = await db
         .collection(a.collection)
         .findOne(filter, projection ? { projection } : {});
-      return doc ?? { message: "Dokumen tidak ditemukan." };
+      return doc ?? { message: "Document not found." };
     },
     { readOnlyHint: true }
   );
 
   reg(
     "get_by_id",
-    "Ambil satu dokumen berdasarkan _id. String hex 24 karakter otomatis dikonversi menjadi ObjectId.",
+    "Fetch one document by _id. A 24-character hex string is automatically converted to an ObjectId.",
     {
       database: S.DatabaseArg,
       collection: S.CollectionArg,
-      id: z.string().min(1).describe('Nilai _id dokumen. Contoh: "665f1c9e2f8b3a0012ab34cd".'),
+      id: z.string().min(1).describe('The _id value of the document. Example: "665f1c9e2f8b3a0012ab34cd".'),
     },
     async (a) => {
       const db = await getDb(a.database);
       const doc = await db
         .collection(a.collection)
         .findOne({ _id: maybeObjectId(a.id) });
-      return doc ?? { message: `Dokumen dengan _id '${a.id}' tidak ditemukan.` };
+      return doc ?? { message: `Document with _id '${a.id}' was not found.` };
     },
     { readOnlyHint: true }
   );
 
   reg(
     "count",
-    "Menghitung jumlah dokumen yang cocok dengan filter.",
+    "Count the number of documents matching the filter.",
     {
       database: S.DatabaseArg,
       collection: S.CollectionArg,
@@ -108,11 +108,11 @@ export function registerQueryTools(server) {
 
   reg(
     "distinct",
-    "Ambil daftar nilai unik dari sebuah field (opsional dengan filter).",
+    "Fetch a list of unique values of a field (optionally with a filter).",
     {
       database: S.DatabaseArg,
       collection: S.CollectionArg,
-      field: z.string().min(1).describe("Nama field yang ingin diambil nilai uniknya."),
+      field: z.string().min(1).describe("The field name whose unique values you want to fetch."),
       filter: S.FilterArg,
     },
     async (a) => {
@@ -132,7 +132,7 @@ export function registerQueryTools(server) {
 
   reg(
     "aggregate",
-    "Jalankan aggregation pipeline MongoDB untuk analisis data (grouping, join via $lookup, dsb).",
+    "Run a MongoDB aggregation pipeline for data analysis (grouping, join via $lookup, etc.).",
     {
       database: S.DatabaseArg,
       collection: S.CollectionArg,
@@ -143,7 +143,7 @@ export function registerQueryTools(server) {
       const db = await getDb(a.database);
       const pipeline = parseJson(a.pipeline, "pipeline");
       if (!Array.isArray(pipeline)) {
-        throw new Error("'pipeline' harus berupa array of stages.");
+        throw new Error("'pipeline' must be an array of stages.");
       }
       const limit = clampLimit(a.limit, 200);
       let docs = await db
@@ -167,7 +167,7 @@ export function registerQueryTools(server) {
 
   reg(
     "list_indexes",
-    "Daftar semua index pada sebuah koleksi.",
+    "List all indexes on a collection.",
     { database: S.DatabaseArg, collection: S.CollectionArg },
     async (a) => {
       const db = await getDb(a.database);

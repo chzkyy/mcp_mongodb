@@ -7,13 +7,13 @@ import {
   CollectionArg,
 } from "../lib/schemas.js";
 
-/** Tools administratif: info server, database, dan koleksi */
+/** Administrative tools: server info, databases, and collections */
 export function registerAdminTools(server) {
   const reg = registrar(server);
 
   reg(
     "server_info",
-    "Cek koneksi dan ambil informasi server MongoDB (versi, host, status replikasi). Gunakan ini untuk memastikan koneksi berjalan.",
+    "Check the connection and fetch MongoDB server information (version, host, replication status). Use this to verify the connection is working.",
     {},
     async () => {
       const client = await getClient();
@@ -35,7 +35,7 @@ export function registerAdminTools(server) {
 
   reg(
     "list_databases",
-    "Daftar semua database yang tersedia beserta ukurannya.",
+    "List all available databases along with their sizes.",
     {},
     async () => {
       const client = await getClient();
@@ -54,7 +54,7 @@ export function registerAdminTools(server) {
 
   reg(
     "list_collections",
-    "Daftar semua koleksi di dalam sebuah database.",
+    "List all collections inside a database.",
     { database: DatabaseArg },
     async (a) => {
       const db = await getDb(a.database);
@@ -74,7 +74,7 @@ export function registerAdminTools(server) {
 
   reg(
     "db_stats",
-    "Statistik database: jumlah koleksi, objek, ukuran data, dan index.",
+    "Database statistics: number of collections, objects, data size, and indexes.",
     { database: DatabaseArg },
     async (a) => {
       const db = await getDb(a.database);
@@ -95,7 +95,7 @@ export function registerAdminTools(server) {
 
   reg(
     "collection_stats",
-    "Statistik koleksi: jumlah dokumen, ukuran rata-rata, ukuran storage, dan index.",
+    "Collection statistics: document count, average size, storage size, and indexes.",
     { database: DatabaseArg, collection: CollectionArg },
     async (a) => {
       const db = await getDb(a.database);
@@ -104,7 +104,7 @@ export function registerAdminTools(server) {
         .aggregate([{ $collStats: { storageStats: {} } }])
         .toArray();
       if (!rows || rows.length === 0) {
-        throw new Error(`Koleksi '${a.collection}' tidak ditemukan.`);
+        throw new Error(`Collection '${a.collection}' was not found.`);
       }
       const st = rows[0].storageStats || {};
       return {
@@ -123,7 +123,7 @@ export function registerAdminTools(server) {
 
   reg(
     "create_collection",
-    "Membuat koleksi baru di dalam sebuah database.",
+    "Create a new collection inside a database.",
     { database: DatabaseArg, collection: CollectionArg },
     async (a) => {
       const db = await getDb(a.database);
@@ -134,15 +134,15 @@ export function registerAdminTools(server) {
 
   reg(
     "rename_collection",
-    "Mengganti nama sebuah koleksi.",
+    "Rename a collection.",
     {
       database: DatabaseArg,
       collection: CollectionArg,
-      newName: z.string().min(1).describe("Nama baru untuk koleksi."),
+      newName: z.string().min(1).describe("The new name for the collection."),
       dropTarget: z
         .boolean()
         .optional()
-        .describe("Hapus koleksi tujuan bila namanya sudah dipakai (default false)."),
+        .describe("Drop the target collection if the name is already in use (default false)."),
     },
     async (a) => {
       const db = await getDb(a.database);
@@ -156,7 +156,7 @@ export function registerAdminTools(server) {
 
   reg(
     "drop_collection",
-    "PERINGATAN: Menghapus koleksi BESERTA SELURUH ISINYA secara permanen!",
+    "WARNING: Permanently deletes a collection together with ALL of its contents!",
     { database: DatabaseArg, collection: CollectionArg },
     async (a) => {
       const db = await getDb(a.database);
@@ -166,21 +166,21 @@ export function registerAdminTools(server) {
       });
       return dropped
         ? { dropped: `${db.databaseName}.${a.collection}` }
-        : { message: `Koleksi '${a.collection}' tidak ditemukan, tidak ada yang dihapus.` };
+        : { message: `Collection '${a.collection}' was not found, nothing was deleted.` };
     },
     { destructiveHint: true }
   );
 
   reg(
     "drop_database",
-    "PERINGATAN: Menghapus seluruh database beserta semua koleksinya secara permanen! Wajib set confirm: true.",
+    "WARNING: Permanently deletes an entire database along with all of its collections! Must set confirm: true.",
     {
       database: DatabaseRequired,
-      confirm: z.boolean().describe("Wajib bernilai true sebagai konfirmasi penghapusan."),
+      confirm: z.boolean().describe("Must be true as confirmation of the deletion."),
     },
     async (a) => {
       if (!a.confirm) {
-        throw new Error("Operasi dibatalkan. Set 'confirm': true jika benar-benar ingin menghapus database.");
+        throw new Error("Operation cancelled. Set 'confirm': true if you really want to delete the database.");
       }
       const db = await getDb(a.database);
       await db.dropDatabase();

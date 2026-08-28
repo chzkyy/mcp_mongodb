@@ -1,65 +1,66 @@
 # mcp-mongodb
 
-Server MCP (**Model Context Protocol**) untuk menghubungkan **Claude** ke **MongoDB**.
-Dengan server ini Claude dapat menjelajah, men-query, dan memodifikasi database MongoDB
-Anda secara langsung melalui percakapan.
+An MCP (**Model Context Protocol**) server that connects **Claude** to **MongoDB**.
+With this server, Claude can explore, query, and modify your MongoDB databases
+directly through conversation.
 
-## Fitur / Tools
+## Features / Tools
 
-| Kategori | Tool | Deskripsi |
+| Category | Tool | Description |
 |---|---|---|
-| Info | `server_info` | Cek koneksi & versi MongoDB |
-| | `list_databases` | Daftar semua database + ukuran |
-| Database | `db_stats` | Statistik database |
-| | `drop_database` | ⚠️ Hapus database (wajib `confirm: true`) |
-| Koleksi | `list_collections` | Daftar koleksi dalam database |
-| | `collection_stats` | Statistik koleksi (jumlah dokumen, ukuran) |
-| | `create_collection` | Buat koleksi baru |
-| | `rename_collection` | Ganti nama koleksi |
-| | `drop_collection` | ⚠️ Hapus koleksi beserta isinya |
-| Baca data | `find` | Query dokumen (filter, proyeksi, sort, limit, skip) |
-| | `find_one` | Ambil satu dokumen |
-| | `get_by_id` | Ambil dokumen berdasarkan `_id` (auto-konversi ObjectId) |
-| | `count` | Hitung jumlah dokumen yang cocok |
-| | `distinct` | Nilai unik sebuah field |
-| | `aggregate` | Jalankan aggregation pipeline (`$match`, `$group`, `$lookup`, dll.) |
-| Tulis data | `insert_one` / `insert_many` | Sisipkan dokumen |
-| | `update_one` / `update_many` | Update dengan operator (`$set`, `$inc`, ...) |
-| | `replace_one` | Ganti seluruh isi satu dokumen |
-| | `delete_one` / `delete_many` | ⚠️ Hapus dokumen (filter kosong wajib `confirm: true`) |
-| Index | `create_index` / `drop_index` / `list_indexes` | Kelola index |
+| Info | `server_info` | Check MongoDB connection & version |
+| | `list_databases` | List all databases + sizes |
+| Database | `db_stats` | Database statistics |
+| | `drop_database` | ⚠️ Drop a database (requires `confirm: true`) |
+| Collection | `list_collections` | List collections in a database |
+| | `collection_stats` | Collection statistics (document count, sizes) |
+| | `create_collection` | Create a new collection |
+| | `rename_collection` | Rename a collection |
+| | `drop_collection` | ⚠️ Drop a collection along with its contents |
+| Read data | `find` | Query documents (filter, projection, sort, limit, skip) |
+| | `find_one` | Fetch a single document |
+| | `get_by_id` | Fetch a document by `_id` (auto ObjectId conversion) |
+| | `count` | Count matching documents |
+| | `distinct` | Unique values of a field |
+| | `aggregate` | Run an aggregation pipeline (`$match`, `$group`, `$lookup`, etc.) |
+| Write data | `insert_one` / `insert_many` | Insert documents |
+| | `update_one` / `update_many` | Update with operators (`$set`, `$inc`, ...) |
+| | `replace_one` | Replace the entire contents of a document |
+| | `delete_one` / `delete_many` | ⚠️ Delete documents (empty filter requires `confirm: true`) |
+| Index | `create_index` / `drop_index` / `list_indexes` | Manage indexes |
 
-## Persyaratan
+## Requirements
 
-- Node.js ≥ 18 (dikembangkan & diuji pada v22)
-- Server MongoDB (lokal maupun MongoDB Atlas)
+- Node.js ≥ 18 (developed & tested on v22)
+- A MongoDB server (local or MongoDB Atlas)
 
-## Instalasi
+## Installation
 
 ```bash
 cd d:\mcp_server\mcp_mongodb
 npm install
 ```
 
-## Konfigurasi Environment Variable
+## Environment Variable Configuration
 
-| Variabel | Wajib? | Default | Keterangan |
+| Variable | Required? | Default | Description |
 |---|---|---|---|
-| `MONGODB_URI` | Tidak | `mongodb://localhost:27017` | URI koneksi MongoDB |
-| `MONGODB_DB` | Tidak | — | Nama database default; jika kosong, setiap tool butuh parameter `database` |
+| `MONGODB_URI` | No | `mongodb://localhost:27017` | MongoDB connection URI |
+| `MONGODB_DB` | No | — | Default database name; if empty, every tool needs a database parameter |
 
-Contoh URI Atlas:
+Example Atlas URI:
+
 ```
 mongodb+srv://user:password@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
 ```
 
-## Menghubungkan ke Claude Desktop
+## Connecting to Claude Desktop
 
-1. Buka file konfigurasi:
+1. Open the configuration file:
    - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
-     (biasanya `C:\Users\<NamaAnda>\AppData\Roaming\Claude\claude_desktop_config.json`)
+     (usually `C:\Users\<YourName>\AppData\Roaming\Claude\claude_desktop_config.json`)
    - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-2. Tambahkan entri berikut (sesuaikan path dan kredensial):
+2. Add the following entry (adjust the path and credentials):
 
 ```json
 {
@@ -69,81 +70,81 @@ mongodb+srv://user:password@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=major
       "args": ["d:\\mcp_server\\mcp_mongodb\\index.js"],
       "env": {
         "MONGODB_URI": "mongodb://localhost:27017",
-        "MONGODB_DB": "nama_database_anda"
+        "MONGODB_DB": "your_database_name"
       }
     }
   }
 }
 ```
 
-3. Simpan file, lalu **restart Claude Desktop** (quit sepenuhnya, buka lagi).
-4. Ikon palu/toolbar di kotak chat akan menampilkan tools `mcp-mongodb`.
+3. Save the file, then **restart Claude Desktop** (quit completely, then reopen).
+4. The hammer/toolbar icon in the chat box will show the mcp-mongodb tools.
 
-### Contoh penggunaan di Claude
+### Example usage in Claude
 
-- *"Tampilkan semua database MongoDB"* → `list_databases`
-- *"Ada koleksi apa saja di database toko?"* → `list_collections`
-- *"Cari 10 produk terlaris, urutkan dari yang terbanyak terjual"* → `find` dengan `sort` + `limit`
-- *"Tambahkan produk baru bernama 'Kopi Arabika' harga 85000"* → `insert_one`
-- *"Naikkan stok semua produk kategori 'minuman' sebanyak 10"* → `update_many`
-- *"Berapa total penjualan per bulan?"* → `aggregate` dengan `$group`
-- *"Buat index unique pada field email koleksi users"* → `create_index`
+- *"Show all MongoDB databases"* → `list_databases`
+- *"What collections are in the store database?"* → `list_collections`
+- *"Find the 10 best-selling products, sorted by most sales"* → `find` with `sort` + `limit`
+- *"Add a new product named 'Kopi Arabika' priced at 85000"* → `insert_one`
+- *"Increase the stock of all products in the 'minuman' category by 10"* → `update_many`
+- *"What is the total sales per month?"* → `aggregate` with `$group`
+- *"Create a unique index on the email field of the users collection"* → `create_index`
 
 ## Testing
 
-Smoke test protokol (tidak butuh MongoDB berjalan):
+Protocol smoke test (does not require MongoDB to be running):
 
 ```bash
 npm test
 ```
 
-Output yang diharapkan:
+Expected output:
 
 ```
 PASS: initialize — server=mcp-mongodb v1.0.0
-PASS: tools/list — 25 tool terdaftar
-PASS: tool inti tersedia — semua ada
-PASS: tools/call merespons
+PASS: tools/list — 25 tools registered
+PASS: core tools available — all present
+PASS: tools/call responds
 ```
 
-> Panggilan `server_info` pada smoke test akan menampilkan pesan error bila MongoDB
-> belum berjalan — itu normal dan justru membuktikan jalur RPC berfungsi.
+> A `server_info` call during the smoke test will show an error message if MongoDB
+> is not running — that is normal and actually proves the RPC path works.
 
-## Keamanan & Catatan Penting
+## Security Notes
 
-- **Gunakan akun MongoDB dengan hak minimum** yang diperlukan. Jika Anda hanya ingin
-  Claude membaca data, buat user read-only di MongoDB/Atlas.
-- Jangan menyimpan password di file yang di-commit ke git. Untuk produksi pertimbangkan
-  menyimpan `MONGODB_URI` di environment sistem, bukan di config JSON.
-- Operasi destruktif dilindungi: `drop_database` dan `delete_many` dengan filter kosong
-  menuntut konfirmasi eksplisit (`confirm: true`), namun `update_many` / `delete_many`
-  dengan filter tertentu tetap langsung dieksekusi — selalu periksa rencana aksi Claude
-  sebelum menyetujui.
-- Output query dibatasi (default 50 dokumen, maksimum 1000) agar tidak melebihi
-  konteks Claude.
+- **Use a MongoDB account with the least privileges** required. If you only want
+  Claude to read data, create a read-only user in MongoDB/Atlas.
+- Do not store passwords in files committed to git. For production, consider
+  storing `MONGODB_URI` in the system environment rather than in a JSON config file.
+- Destructive operations are protected: `drop_database` and `delete_many` with an empty
+  filter require explicit confirmation (`confirm: true`), but `update_many` / `delete_many`
+  with a specific filter still run directly — always review Claude's intended action plan
+  before approving.
+- Query output is capped (default 50 documents, maximum 1000) so it does not exceed
+  Claude's context.
 
 ## Troubleshooting
 
-| Masalah | Solusi |
+| Problem | Solution |
 |---|---|
-| Tools tidak muncul di Claude | Pastikan path `node` dan `index.js` benar; lihat log MCP di Claude Desktop (Settings ▸ Developer) |
-| `ServerSelectionTimeoutError` | MongoDB tidak jalan / URI salah / IP belum di-whitelist (Atlas) |
-| `Authentication failed` | Periksa username/password & `authSource` pada URI |
-| Karakter `\` pada Windows | Gunakan double backslash (`\\`) atau forward slash (`/`) di JSON config |
+| Tools do not appear in Claude | Make sure the `node` and `index.js` paths are correct; check the MCP logs in Claude Desktop (Settings ▸ Developer) |
+| `ServerSelectionTimeoutError` | MongoDB is not running / wrong URI / IP not whitelisted (Atlas) |
+| `Authentication failed` | Check username/password and `authSource` in the URI |
+| `\` character on Windows | Use double backslash (`\\`) or forward slash (`/`) in the JSON config |
 
-## Struktur Proyek
+## Project Structure
 
 ```
 mcp_mongodb/
 ├── index.js           # Entry point: McpServer + StdioServerTransport
 ├── lib/
 │   ├── connection.js  # Singleton MongoClient (lazy connect), env config
-│   ├── helpers.js     # Result builder, parser JSON, util ObjectId
-│   └── schemas.js     # Skema Zod bersama
+│   ├── helpers.js     # Result builder, JSON parser, ObjectId utils
+│   └── schemas.js     # Shared Zod schemas
 ├── tools/
-│   ├── admin.js       # Info server, database, koleksi
-│   ├── query.js       # Pembacaan data & agregasi
+│   ├── admin.js       # Server, database, and collection info
+│   ├── query.js       # Data reading & aggregation
 │   ├── documents.js   # Insert/update/replace/delete
-│   └── indexes.js     # Manajemen index
-└── test-smoke.js      # Smoke test JSON-RPC via stdio
+│   └── indexes.js     # Index management
+└── test-smoke.js      # JSON-RPC smoke test over stdio
 ```

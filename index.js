@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
  * mcp-mongodb — MCP (Model Context Protocol) server
- * untuk menghubungkan Claude ke MongoDB.
+ * to connect Claude to MongoDB.
  *
- * Konfigurasi via environment variable:
- *   MONGODB_URI — URI koneksi (default: mongodb://localhost:27017)
- *   MONGODB_DB  — nama database default (opsional)
+ * Configuration via environment variables:
+ *   MONGODB_URI — connection URI (default: mongodb://localhost:27017)
+ *   MONGODB_DB  — default database name (optional)
  *
- * Semua logging dikirim ke stderr; stdout khusus untuk protokol MCP.
+ * All logging goes to stderr; stdout is reserved for the MCP protocol.
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -31,8 +31,8 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error(
-    `[mcp-mongodb] Server MCP berjalan via stdio | URI: ${maskUri(MONGODB_URI)}${
-      DEFAULT_DB ? ` | Database default: ${DEFAULT_DB}` : ""
+    `[mcp-mongodb] MCP server running over stdio | URI: ${maskUri(MONGODB_URI)}${
+      DEFAULT_DB ? ` | Default database: ${DEFAULT_DB}` : ""
     }`
   );
 }
