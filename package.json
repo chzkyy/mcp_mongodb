@@ -1,0 +1,32 @@
+{
+  "name": "mcp-mongodb",
+  "version": "1.0.0",
+  "description": "MCP (Model Context Protocol) server untuk menghubungkan Claude ke MongoDB",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "mcp-mongodb": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test-smoke.js"
+  },
+  "keywords": [
+    "mcp",
+    "mongodb",
+    "claude",
+    "model-context-protocol"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "mongodb": "^7.6.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^11.2.0"
+  }
+}
